@@ -4,6 +4,9 @@
 Description:
 A web dashboard where you can track servers/systems, their current patch levels, when they were last updated, and their status.
 
+Download:
+patch-dashboard.html
+
 Example Inputting: 
 Fill in the form with example data like, 
 
