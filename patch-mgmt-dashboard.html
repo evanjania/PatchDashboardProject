@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patch Management Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Georgia, serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+        
+        .stat-card.critical { background: #e74c3c; }
+        .stat-card.warning { background: #f39c12; }
+        .stat-card.current { background: #27ae60; }
+        .stat-card.total { background: #3498db; }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .add-system {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        .systems-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .systems-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .systems-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .systems-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-critical {
+            background: #fee;
+            color: #c00;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-current {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Patch Management Dashboard</h1>
+        <p class="subtitle">Monitor and track system patch status across your infrastructure</p>
+        
+        <div class="stats">
+            <div class="stat-card critical">
+                <div class="stat-number" id="criticalCount">0</div>
+                <div class="stat-label">Critical</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-number" id="warningCount">0</div>
+                <div class="stat-label">Updates Needed</div>
+            </div>
+            <div class="stat-card current">
+                <div class="stat-number" id="currentCount">0</div>
+                <div class="stat-label">Up to Date</div>
+            </div>
+            <div class="stat-card total">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Total Systems</div>
+            </div>
+        </div>
+        
+        <div class="add-system">
+            <h3 style="margin-bottom: 15px; color: #333;">Add New System</h3>
+            <form id="addSystemForm">
+                <div class="form-row">
+                    <input type="text" id="systemName" placeholder="System Name" required>
+                    <input type="text" id="osVersion" placeholder="OS Version" required>
+                    <input type="text" id="patchLevel" placeholder="Current Patch Level" required>
+                    <input type="date" id="lastUpdated" required>
+                    <select id="status" required>
+                        <option value="">Select Status</option>
+                        <option value="current">Up to Date</option>
+                        <option value="warning">Updates Needed</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <button type="submit">Add System</button>
+            </form>
+        </div>
+        
+        <div id="systemsContainer">
+            <table class="systems-table" id="systemsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>System Name</th>
+                        <th>OS Version</th>
+                        <th>Patch Level</th>
+                        <th>Last Updated</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="systemsBody"></tbody>
+            </table>
+            <div class="empty-state" id="emptyState">
+                <p>No systems added yet. Add your first system above to get started!</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            Project by Evan Jania 2025
+        </div>
+    </div>
+    
+    <script>
+        let systems = [];
+        
+        function updateStats() {
+            const critical = systems.filter(s => s.status === 'critical').length;
+            const warning = systems.filter(s => s.status === 'warning').length;
+            const current = systems.filter(s => s.status === 'current').length;
+            
+            document.getElementById('criticalCount').textContent = critical;
+            document.getElementById('warningCount').textContent = warning;
+            document.getElementById('currentCount').textContent = current;
+            document.getElementById('totalCount').textContent = systems.length;
+        }
+        
+        function renderSystems() {
+            const tbody = document.getElementById('systemsBody');
+            const table = document.getElementById('systemsTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (systems.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = systems.map((system, index) => `
+                <tr>
+                    <td><strong>${system.name}</strong></td>
+                    <td>${system.osVersion}</td>
+                    <td>${system.patchLevel}</td>
+                    <td>${system.lastUpdated}</td>
+                    <td><span class="status-badge status-${system.status}">${system.status === 'current' ? 'Up to Date' : system.status === 'warning' ? 'Updates Needed' : 'Critical'}</span></td>
+                    <td><button class="delete-btn" onclick="deleteSystem(${index})">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+        
+        function deleteSystem(index) {
+            systems.splice(index, 1);
+            renderSystems();
+            updateStats();
+        }
+        
+        document.getElementById('addSystemForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const system = {
+                name: document.getElementById('systemName').value,
+                osVersion: document.getElementById('osVersion').value,
+                patchLevel: document.getElementById('patchLevel').value,
+                lastUpdated: document.getElementById('lastUpdated').value,
+                status: document.getElementById('status').value
+            };
+            
+            systems.push(system);
+            renderSystems();
+            updateStats();
+            
+            this.reset();
+        });
+        
+        updateStats();
+    </script>
+</body>
+</html>
